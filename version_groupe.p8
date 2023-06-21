@@ -1,19 +1,21 @@
 pico-8 cartridge // http://www.pico-8.com
 version 38
 __lua__
---jeux-pico8
+--séquence principale
 
-
+-- au lancement
 function _init()
 create_player()
 init_projectiles()
 end
  
+-- mise à jour à chaque frame (60 fois par secondes)
 function _update60()
 player_movement()
 updt_projectiles()
 end
-	
+
+-- affichage des sprites
 function _draw()
 
 --clear interface
@@ -72,12 +74,12 @@ neoy=perso.y
 --condition si check-flag 
 --renvoi true donc 0	
 	if check_flag(0,neox,neoy)
-	then --on avance pas 
-	else --si pas de flag on avance
-	perso.x=mid(0,neox,127)
-	perso.y=mid(0,neoy,63)
+		then --on avance pas 
+		else --si pas de flag on avance
+			perso.x=mid(0,neox,127)
+			perso.y=mid(0,neoy,63)
 	--la commande mid fait qu'une fois les intervalles depasser on revien a la valeur du milieu)
-	end
+		end
 	end
 	
 	function affichage_perso()
@@ -87,30 +89,43 @@ neoy=perso.y
 -->8
 --tirs
 
-function shoot()
-	print(neox,neoy)
-	
- local new_projectile={
- x=neox*8,
- y=neoy*8,
-speed=1
- }
- add(projectiles,new_projectile)
-end
 
+-- crée le tableau des projectiles qui est au départ vide et sera rempli à chaque tir
 function init_projectiles()
-projectiles={}
+	projectiles={}
 end
 
+-- fonction appelée quand le joueur tire
+function shoot()
+    -- crée une variable temporaire qui prends en compte la position actuelle du joueur
+	local new_projectile={
+		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
+		x=neox*8,
+		y=neoy*8,
+		speed=1
+		}
+-- on ajoute ce projectile qu'on vient de créer dans le tableau des projectiles
+add(projectiles,new_projectile)
+end
+
+-- fait se déplacer le projectile en temps réel
 function updt_projectiles()
+	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixée à sa position initiale
 		proj.x=proj.x+proj.speed
-		-- if (proj.x<-8) del(projectile, proj)
+
+		-- supprime le projectile si il sort des bords de la map,
+		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
+		if (proj.x<-8 or proj.y<-8) del(projectile, proj)
 		end
 	end
 
+-- affiche le sprite du projectile	
 function draw_projectiles()
-	for proj in all(projectiles) do -- pour b parcourant le tableau bullets, repeter :
+	-- pour tous les projectiles du tableau
+	for proj in all(projectiles) do
+		-- aficher la sprite num. 128 aux coordonnées x et y du projectile
 		spr(128,proj.x,proj.y)
 	end
 end
