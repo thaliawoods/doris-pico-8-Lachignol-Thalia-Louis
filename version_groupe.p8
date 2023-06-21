@@ -48,8 +48,6 @@ end
 -->8
 --player
 
-
-
 function create_player()
 --on donne la position du sprite au depart
 --puis la numero de sprite
