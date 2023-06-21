@@ -19,13 +19,9 @@ end
 function _draw()
 
 --clear interface
-
 cls()
-
 --draw map on left corner
-
 map(0,0,0,0)
-
 --draw sprit number 1 at xy point
 affichage_perso()
 
