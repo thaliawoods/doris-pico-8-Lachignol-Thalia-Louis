@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 38
 __lua__
---séquence principale
+--sれたquence principale
 
 -- au lancement
 function _init()
@@ -9,7 +9,7 @@ create_player()
 init_projectiles()
 end
  
--- mise à jour à chaque frame (60 fois par secondes)
+-- mise れき jour れき chaque frame (60 fois par secondes)
 function _update60()
 player_movement()
 updt_projectiles()
@@ -59,11 +59,10 @@ end
 function player_movement()
 neox=perso.x
 neoy=perso.y
-
-	if (btn(➡️)) neox+=1
-	if (btn(⬅️)) neox-=1
-	if (btn(⬆️)) neoy-=1
-	if (btn(⬇️)) neoy+=1
+	if (btn(➡️)) neox+=1 lastbtn=➡️
+	if (btn(⬅️)) neox-=1 lastbtn=⬅️
+	if (btn(⬆️)) neoy-=1	lastbtn=⬆️
+	if (btn(⬇️)) neoy+=1	lastbtn=⬇️
 	if (btn(❎)) then 
 		shoot()
 	end
@@ -86,31 +85,49 @@ neoy=perso.y
 --tirs
 
 
--- crée le tableau des projectiles qui est au départ vide et sera rempli à chaque tir
+-- crれたe le tableau des projectiles qui est au dれたpart vide et sera rempli れき chaque tir
 function init_projectiles()
 	projectiles={}
 end
 
--- fonction appelée quand le joueur tire
+-- fonction appelれたe quand le joueur tire
 function shoot()
-    -- crée une variable temporaire qui prends en compte la position actuelle du joueur
+    -- crれたe une variable temporaire qui prends en compte la position actuelle du joueur
 	local new_projectile={
 		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
 		x=neox*8,
 		y=neoy*8,
-		speed=1
+		speed=1,
+		neolastbtn=lastbtn
 		}
--- on ajoute ce projectile qu'on vient de créer dans le tableau des projectiles
+-- on ajoute ce projectile qu'on vient de crれたer dans le tableau des projectiles
 add(projectiles,new_projectile)
 end
 
--- fait se déplacer le projectile en temps réel
+-- fait se dれたplacer le projectile en temps rれたel
 function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
-		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixée à sa position initiale
-		proj.x=proj.x+proj.speed
+	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
+		if (proj.neolastbtn==⬅️) then	
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
+		proj.x=proj.x-proj.speed
+		end
 
+		if (proj.neolastbtn==➡️) then	
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
+		proj.x=proj.x+proj.speed
+		end
+		
+		if (proj.neolastbtn==⬆️) then	
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
+		proj.y=proj.y-proj.speed
+		end
+		
+		if (proj.neolastbtn==⬇️) then	
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
+		proj.y=proj.y+proj.speed
+		end	
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
 		if (proj.x<-8 or proj.y<-8) del(projectile, proj)
@@ -121,7 +138,7 @@ function updt_projectiles()
 function draw_projectiles()
 	-- pour tous les projectiles du tableau
 	for proj in all(projectiles) do
-		-- aficher la sprite num. 128 aux coordonnées x et y du projectile
+		-- aficher la sprite num. 128 aux coordonnれたes x et y du projectile
 		spr(128,proj.x,proj.y)
 	end
 end
