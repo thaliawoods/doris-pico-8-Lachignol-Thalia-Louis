@@ -12,6 +12,7 @@ end
 -- mise れき jour れき chaque frame (60 fois par secondes)
 function _update60()
 player_movement()
+get_speed()
 updt_projectiles()
 end
 
@@ -20,7 +21,7 @@ function _draw()
 
 --clear interface
 cls()
---draw map on left corner
+--draw map on "left" corner
 map(0,0,0,0)
 --draw sprit number 1 at xy point
 affichage_perso()
@@ -57,12 +58,29 @@ end
 function player_movement()
 neox=perso.x
 neoy=perso.y
-	if (btn(➡️)) neox+=1 lastbtn=➡️
-	if (btn(⬅️)) neox-=1 lastbtn=⬅️
-	if (btn(⬆️)) neoy-=1	lastbtn=⬆️
-	if (btn(⬇️)) neoy+=1	lastbtn=⬇️
-	if (btnp(❎)) then 
+	if (btn(❎)) then 
 		shoot()
+	end
+	if (btn(⬆️)) then 
+		neoy-=1
+		dir="up"
+	elseif ((btn(➡️))and(btn(⬆️))) then
+		dir="diagoh_d"
+	elseif (btn(➡️)) then 
+		neox+=1 
+		dir="right"
+	elseif ((btn(➡️))and(btn(⬇️))) then 
+		dir="diagob_d"
+	elseif (btn(⬇️)) then 
+		neoy+=1	
+		dir="down"
+	elseif ((btn(⬅️))and(btn(⬇️))) then 
+		dir="diagob_g"
+	elseif (btn(⬅️)) then 
+		neox-=1 
+		dir="left"
+	elseif ((btn(⬅️))and(btn(⬆️))) then 
+		dir="diagob_g"
 	end
 --condition si check-flag 
 --renvoi true donc 0	
@@ -82,6 +100,41 @@ neoy=perso.y
 -->8
 --tirs
 
+	function get_speed()
+
+		if dir=="up" then
+		speedx=0
+		speedy=-1
+		
+		elseif dir=="diagoh_d" then
+		speedx=1
+		speedy=-1
+
+		elseif dir=="right" then
+		speedx=1
+		speedy=0
+
+		elseif dir=="diagob_d" then
+		speedx=1
+		speedy=1
+		
+		elseif dir=="down" then
+		speedx=0
+		speedy=1
+		
+		elseif dir=="diagob_g" then
+		speedx=-1
+		speedy=1
+
+		elseif dir=="left" then
+		speedx=-1
+		speedy=0
+		
+		elseif dir=="diagoh_g" then
+		speedx=-1
+		speedy=-1
+		end
+	end
 
 -- crれたe le tableau des projectiles qui est au dれたpart vide et sera rempli れき chaque tir
 function init_projectiles()
@@ -90,12 +143,16 @@ end
 
 -- fonction appelれたe quand le joueur tire
 function shoot()
+
     -- crれたe une variable temporaire qui prends en compte la position actuelle du joueur
 	local new_projectile={
 		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
+		
 		x=neox*8,
 		y=neoy*8,
-		speed=1,
+		neospeedx=speedx,
+		neospeedy=speedy,
+		
 		}
 -- on ajoute ce projectile qu'on vient de crれたer dans le tableau des projectiles
 add(projectiles,new_projectile)
@@ -106,26 +163,16 @@ function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
 	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
-		if (proj.neolastbtn==⬅️) then	
-		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
-		proj.x=proj.x-proj.speed
+		proj.x=proj.x+proj.neospeedx
+		proj.y=proj.y+proj.neospeedy
+	
 
-		elseif (proj.neolastbtn==➡️) then	
-		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
-		proj.x=proj.x+proj.speed
-		
-		elseif (proj.neolastbtn==⬆️) then	
-		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
-		proj.y=proj.y-proj.speed
-		
-		else
-		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
-		proj.y=proj.y+proj.speed
-		end	
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
-		if (proj.x<-8 or proj.y<-8) del(projectile, proj)
+		if (proj.x<-8 or proj.y<-8) then del(projectiles, proj)
+		
 		end
+	end
 	end
 
 -- affiche le sprite du projectile	
