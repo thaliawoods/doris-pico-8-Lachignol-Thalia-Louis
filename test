@@ -7,12 +7,14 @@ __lua__
 function _init()
 create_player()
 init_projectiles()
+apparition_enemies()
 end
  
 -- mise れき jour れき chaque frame (60 fois par secondes)
 function _update60()
 player_movement()
 updt_projectiles()
+updt_enemies()
 end
 
 -- affichage des sprites
@@ -30,9 +32,12 @@ affichage_perso()
 -- coin superieur g. camera
 cam_x=0
 cam_y=0
-
+-- jet de sang
 draw_projectiles()
 
+--enemies
+for e in all(enemies) do
+spr(61,e.x,e.y)
 end
 
 
@@ -48,6 +53,8 @@ end
 -->8
 --player
 
+
+
 function create_player()
 --on donne la position du sprite au depart
 --puis la numero de sprite
@@ -57,17 +64,13 @@ end
 function player_movement()
 neox=perso.x
 neoy=perso.y
+
+	if (btn(➡️)) neox+=1
+	if (btn(⬅️)) neox-=1
+	if (btn(⬆️)) neoy-=1
+	if (btn(⬇️)) neoy+=1
 	if (btn(❎)) then 
 		shoot()
-	end
-	if (btn(⬆️)) neoy-=1	dir=⬆️
-	elseif ((btn(➡️))&&(btn(⬆️))) dir=diagoH_D
-	elseif (btn(➡️)) neox+=1 dir=➡️
-	elseif ((btn(➡️))&&(btn(⬇️))) dir=diagoB_D
-	elseif (btn(⬇️)) neoy+=1	dir=⬇️
-	elseif ((btn(⬅️))&&(btn(⬇️))) dir=diagoB_G
-	elseif (btn(⬅️)) neox-=1 dir=⬅️
-	elseif ((btn(⬅️))&&(btn(⬆️))) dir=diagoH_G
 	end
 --condition si check-flag 
 --renvoi true donc 0	
@@ -100,41 +103,7 @@ function shoot()
 		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
 		x=neox*8,
 		y=neoy*8,
-		speedX,
-		speedY,
-		
-		if (dir==⬆️) then
-		speedX=O
-		speedY=-1
-		
-		elseif (dir==diagoH_D )then
-		speedX=1
-		speedY=-1
-
-		elseif (dir== ➡️)then
-		speedX=1
-		speedY=0
-
-		elseif (dir==diagoB_D)then
-		speedX=1
-		speedY=1
-		
-		elseif (dir== ⬇️)then
-		speedX=0
-		speedY=1
-		
-		elseif (dir== diagoB_G)then
-		speedX=-1
-		speedY=1
-
-		elseif (dir== ⬅️)then
-		speedX=-1
-		speedY=0
-		
-		else 
-		speedX=-1
-		speedY=-1
-		end
+		speed=1
 		}
 -- on ajoute ce projectile qu'on vient de crれたer dans le tableau des projectiles
 add(projectiles,new_projectile)
@@ -144,15 +113,9 @@ end
 function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
-	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
-		proj.x=proj.x+proj.speedX
-		proj.y=proj.y+proj.speedY
-	
+		-- change la position horizontale du projectile en ajoutant la vitesse qu'on a fixれたe れき sa position initiale
+		proj.x=proj.x+proj.speed
 
-		
-		
-		
-		
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
 		if (proj.x<-8 or proj.y<-8) del(projectile, proj)
@@ -169,6 +132,52 @@ function draw_projectiles()
 end
 
 
+-->8
+--enemies
+
+function apparition_enemies()
+neo_enemy={
+x=4,
+y=5,
+life=2
+}
+add(enemies,neo_enemy)
+end
+
+function updt_enemies()
+for e in all(enemies)
+do
+e.y+=0,2
+e.x+=0,2
+if 	e.x > 126
+		 then
+			del(enemies,e)
+			end
+			end
+			
+			
+			
+			--collision
+			for proj in all(projectiles)
+			do
+			if collision(proj,e) 
+			then
+			del(projectiles,proj)
+			e.life-=1
+			if e.life==0 then
+			del (enemies,e)
+			end
+			end
+			end
+			
+-->8
+function collision(proj,e)
+return not( proj.x>e.x+8
+		or	proj.y>e.y+8
+		or	proj.y+8<e.y
+		or	proj.x+8<e.x)
+			
+	end
 __gfx__
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
