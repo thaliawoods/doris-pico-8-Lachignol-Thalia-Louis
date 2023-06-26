@@ -1,64 +1,110 @@
 pico-8 cartridge // http://www.pico-8.com
 version 38
 __lua__
---sequence principale
+-- creer player
 
--- au lancement
-function _init()
-create_player()
-init_projectiles()
-enemies={}
+function create_player()
 
+-- on donne la position du sprite au depart 
+
+-- puis le numero de sprite
+
+perso={x=5,y=5,sprite=61,cooldown}
 end
- 
+
+
+-- creer ennemis
+
+function make_ennemi(x,y,sprite)
+ local ennemi = {}
+ ennemi.x = x
+ ennemi.y = y
+ ennemi.sprite = sprite
+ ennemi.dx = 0
+ ennemi.dy = 0
+ ennemi.tag = 0
+ ennemi.box = {x1=0,y1=0,x2=7,y2=7}
+ add(ennemis,ennemi)
+ return ennemi
+end
+
+
 -- mise a jour a chaque frame (60 fois par secondes)
+
 function _update60()
 player_movement()
 get_speed()
 updt_projectiles()
+move_ennemis()
+collisions()
+end
+
+
+-- au lancement
+
+function _init()
+create_player()
+init_projectiles()
+ennemis = {}
+p = make_ennemi(60,120,1)
+ p.cooldown = 0
+ p.tag = 1
+ p.box = {x1=1,y1=1,x2=6,y2=6}
+ for i =1,10 do
+  mstr = make_ennemi(rnd(128),rnd(48),192)
+  mstr.dy =1
+  mstr.tag = 2
+end
 end
 
 -- affichage des sprites
+
 function _draw()
 
---clear interface
-cls()
---draw map on "left" corner
-map(0,0,0,0)
---draw sprite number 1 at xy point
-affichage_perso()
---draw sprite enemy
-for e in all (enemies) do
-spr(192,e.x,e.y)
-end
+-- clear interface
 
+cls()
+
+
+-- draw map on "left" corner
+
+map(0,0,0,0)
+
+-- draw sprite number 1 at xy point
+
+affichage_perso()
 
 -- coin superieur g. camera
+
 cam_x=0
 cam_y=0
 
+-- affichage projectiles
+
 draw_projectiles()
 
+-- affichage ennemis
+
+draw_ennemis()
+print(#ennemis,4,64,8)
 end
 
 
 
 -->8
---map
+-- map
+
 
 function check_flag(flag,x,y)
+
 --recuperer flag sur la position
+
 sprite=mget(x,y)
 return fget(sprite,0)
 end
--->8
---player
 
-function create_player()
---on donne la position du sprite au depart
---puis le numero de sprite
-perso={x=5,y=5,sprite=61}
-end
+
+-- mouvement du perso
 
 function player_movement()
 neox=perso.x
@@ -88,23 +134,35 @@ neoy=perso.y
 		dir="diagob_g"
 	end
 	
---condition si check-flag 
---renvoi true donc 0	
+	
+-- condition si check-flag 
+
+-- renvoi true donc 0	
+
 	if check_flag(0,neox,neoy)
-		then --on avance pas 
-		else --si pas de flag on avance
+	
+		then -- on avance pas 
+		
+		else -- si pas de flag on avance
+		
 			perso.x=mid(0,neox,127)
 			perso.y=mid(0,neoy,63)
-	--la commande mid fait qu'une fois les intervalles depasses on revient a la valeur du milieu)
+			
+	-- la commande mid fait qu'une fois les intervalles depasses on revient a la valeur du milieu)
+
 		end
 	end
 	
+	
 	function affichage_perso()
-	--on cherche a faire avancer le sprite d'une case de 8px par une case
+	
+	-- on cherche a faire avancer le sprite d'une case de 8px par une case 
+	
 	spr(perso.sprite,perso.x*8,perso.y*8)
 	end
--->8
---tirs
+	
+	
+	-- tirs
 
 	function get_speed()
 
@@ -141,63 +199,145 @@ neoy=perso.y
 		speedy=-1
 		end
 	end
+	
+	
+	-- deplacement ennemis
 
--- creer le tableau des projectiles qui est au depart vide et sera rempli a chaque tir
-function init_projectiles()
-	projectiles={}
+function move_ennemis()
+ for a in all(ennemis) do
+  a.x += a.dx
+  a.y += a.dy
+end
 end
 
+
+-- dessiner ennemis
+
+function draw_ennemis()
+ for a in all (ennemis) do
+ spr(a.sprite,a.x,a.y)
+ if (a.x<-8 or a.x>=128 or
+     a.y<-8 or a.y>=128) then
+ del(ennemis,a)
+ end
+end
+end
+
+
+-- creer des boxs
+
+function get_box(a)
+ local box = {}
+ box.x1 = a.x+a.box.x1
+ box.y1 = a.y+a.box.y1
+ box.x2 = a.x+a.box.x2
+ box.y2 = a.x+a.box.y2
+ return box
+end
+
+
+-- verifier si collisions
+
+function check_coll(a,b)
+ if (a == b or a.tag == b.tag) return false
+  local box_a = get_box(a)
+  local box_b = get_box(b)
+   if (box_a.x1 > box_b.x2 or
+       box_a.y1 > box_b.y2 or
+       box_b.x1 > box_a.x2 or
+       box_b.y1 > box_a.y2) then
+   return false
+  end
+ return true
+end
+
+
+-- collisions
+
+function collisions()
+ for a in all(ennemis) do
+  for b in all(ennemis) do
+   if (check_coll(a,b) == true) then
+    del(ennemis,a)
+    del(ennemis,b)
+   end
+  end
+ end
+end
+  
+
+
+-- creer le tableau des projectiles qui est au depart vide et sera rempli a chaque tir
+
+function init_projectiles()
+	projectiles={}
+
+
 -- fonction appelee quand le joueur tire
+
 function shoot()
 
-    -- crれたe une variable temporaire qui prends en compte la position actuelle du joueur
-	local new_projectile={
-		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
+-- creer une variable temporaire qui prends en compte la position actuelle du joueur
+
+local new_projectile={
+
+-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
+	
 		x=neox*8,
 		y=neoy*8,
 		neospeedx=speedx,
 		neospeedy=speedy,
-		
 		}
+		
 -- on ajoute ce projectile qu'on vient de creer dans le tableau des projectiles
+
 add(projectiles,new_projectile)
+
 end
+
 
 -- fait se deplacer le projectile en temps reel
+
 function updt_projectiles()
 
-	-- pour tous les projectiles dans le tableau
-	for proj in all(projectiles) do
+-- pour tous les projectiles dans le tableau
+ 
+ for proj in all(projectiles) do
 
-	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
+-- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
+
 		proj.x=proj.x+proj.neospeedx
 		proj.y=proj.y+proj.neospeedy
-	
-
-		-- supprime le projectile si il sort des bords de la map,
-		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
-		if (proj.x<-8 or proj.y<-8) del(projectile, proj)
-		end
+		
 	end
+end
+end
+
 
 -- affiche le sprite du projectile	
+
 function draw_projectiles()
+	
 	-- pour tous les projectiles du tableau
+	
 	for proj in all(projectiles) do
-		-- aficher la sprite num. 128 aux coordonnれたes x et y du projectile
+	
+  -- aficher la sprite num. 128 aux coordonnees x et y du projectile
+		
 		spr(128,proj.x,proj.y)
 	end
-	end
+end
+
+
+
 
 -->8
---enemies
 
-function spawn_enemies()
- add(enemies,{
- x=5,
- y=5
- })
-end
+-->8
+
+-->8
+
+
 __gfx__
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
@@ -296,8 +436,8 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 eeeeeeee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-ebeeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-ebbeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+eebeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+eebeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 eebeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 eebeebee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 eebeeeee000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -307,8 +447,8 @@ __gff__
 0000000000000000000000000001010100000000000000000000000000010001000000000000000000000000000101010000000000000000000000000000000002020404000000000200000000000000020204040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
-0d0e0e40410e0e2f000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-1d0102031c051c1f00000045464747474b4c4748484800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0d0e0e40410e0e2f000000000000000000010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+1d0102031c051c1f00000045464747474b4c4701010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1d0719142c07071f000000555656595a5b5c5d56565f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1d1c1c07072c0b1f00000065666669666b6c6666666f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 1d311207191c071f000000650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
