@@ -7,7 +7,7 @@ __lua__
 -- au lancement
 function _init()
 	init_ennemis()
-	make_ennemi(1, 6, 6)
+	make_ennemi(1, 8, 8)
 	create_player()
 	init_projectiles()
 end
@@ -70,7 +70,7 @@ function  update_camera()
 	-- retourne la valeur du milieu lorsqu'une valeur min/max est atteinte
 	camx = mid(0, perso.x-8, 31-15) --(? notion des point et virugule)
 	camy = mid(0, perso.y-8, 31-15)
-	camera(perso.x, perso.y)
+	camera(camx * 8, camy * 8)
 end
 
 -- change la sprite quand la clef est ramasser
@@ -161,12 +161,11 @@ function player_movement()
 		dir = "diagob_g"
 	end
 	
-	interact(neox,neoy)
+	interact(neox, neoy)
 	
 	if not check_flag(0, neox, neoy) then
 		perso.x = mid(0, neox, 127)
 		perso.y = mid(0, neoy, 63)
-	else
 	end
 end
 		
@@ -190,9 +189,9 @@ end
 -- creer ennemis
 function make_ennemi(sprite, x, y)
 	local new_ennemi = {
-	x = x * 8,
-	y = y * 8,
 	sprite = sprite,
+	x = x,
+	y = y,
 	dx = 1,
 	dy = 1,
 	tag = 1,
@@ -207,25 +206,51 @@ function move_ennemis()
 
 	-- pour chaque ennemi
 	for a in all(ennemis) do
-		-- x suivant = x plus deplacement dx
-		e_neox = a.x + a.dx
+		if ((perso.x - a.x) < 8) or ((perso.x - a.x) > -8) then
 
-		-- y suivant = y plus deplacement dy
-		e_neoy = a.y + a.dy
+			 if (perso.x > a.x) then
+				e_neox = a.x + (1/10)
+		
+			elseif (perso.x < a.x) then
+				e_neox = a.x - (1/10)
+			else 
+				e_neox = 0
+			end
+		end			
+		if ((perso.y - a.y) < 8) or ((perso.x - a.y) > -8) then
 
+			if (perso.y > a.y) then
+				e_neoy = a.y + (1/10)
 
+			elseif (perso.y < a.y) then
+					e_neoy = a.y - (1/10)
+
+			else 
+				e_neoy = 0
+			end
+		end
+		
 
 		-- si la position suivante n'est PAS un mur (flag 0)
-		if not check_flag(0, e_neox, e_neoy) then 
+		if (not check_flag(0, e_neox, e_neoy)
+		and ((perso.x - a.x) < 8) or ((perso.x - a.x) > -8))
+		and (((perso.y - a.y) < 8) or ((perso.x - a.y) > -8))
+		then 
 
 			-- avancer normalement
 			a.x = e_neox
 			a.y = e_neoy
+		else
+			while check_flag(0, e_neox, e_neoy) do
+				randx = (flr(rnd(3)) -1)
+				randy = (flr(rnd(3)) -1)
 
+				e_neox = a.x + randx
 
-			-- une fois sorti de la boucle (des qu'une position aleatoire n'est pas un mur)
-			-- on avance
-
+				e_neoy = a.y + randy
+			end
+			a.x = e_neox
+			a.y = e_neoy
 		end
 	end
 end
@@ -233,7 +258,7 @@ end
    -- dessiner ennemis
 function draw_ennemis()
 	for a in all(ennemis) do
-		spr(a.sprite,a.x,a.y) end
+		spr(a.sprite, a.x * 8, a.y * 8) end
 		--if (a.x<-8 or a.x>=128 or a.y<-8 or a.y>=128) then
 			--del(ennemis,a
 end
@@ -255,8 +280,8 @@ end
 
 -- verifier si collisions
 function check_coll(a,b)
+
 	if (a == b or a.tag == b.tag) return false
-	
 	local box_a = get_box(a)
 	local box_b = get_box(b)
 
@@ -331,8 +356,8 @@ function shoot()
 -- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
 		x = neox * 8,
 		y = neoy * 8,
-		neovecteurx = vecteurx,
-		neovecteury = vecteury,
+		neovecteurx = vecteurx * 4,
+		neovecteury = vecteury * 4,
 		}
 
 -- on ajoute ce projectile qu'on vient de creer dans le tableau des projectiles
@@ -345,14 +370,14 @@ function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
 
-	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
-		proj.x = proj.x+proj.neovecteurx
-		proj.y = proj.y+proj.neovecteury
+	    -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
+		proj.x = proj.x + proj.neovecteurx
+		proj.y = proj.y + proj.neovecteury
 	
 
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
-		if (proj.x < -8 or proj.y < -8) 
+		if check_flag(0, proj.x, proj.y)
 			then del(projectiles, proj)
 		end
 	end
@@ -365,7 +390,7 @@ function draw_projectiles()
 	for proj in all(projectiles)
 	do
 		-- aficher la sprite num. 128 aux coordonnれたes x et y du projectile
-		spr(128, proj.x, proj.y)
+		spr(2, proj.x, proj.y)
 	end
 end
 -->8
@@ -410,14 +435,14 @@ function print_outline(text, x, y)
 	print(text, x, y, 7)
 end
 __gfx__
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-000000000000ee005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-0070070000eeeee05555555555555555555555555555555555555555555555555555555555566055555555555555555555555555440000000000000000000044
-0007700000e0e0e05566055555555555555555555560555555555555555555555555555555555605555555555556605555555555440555555555555555555544
-000770000eeeeeee5655605555555555555555555656055555555555555555555555555555555555555555555565560555555555440555555555555555555544
-00700700eeeeeeee5555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440556055555555555555544
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440565605555555555555544
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555555555544
+00000000000000000000008055555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
+000000000000ee000000000055555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
+0070070000eeeee00088880055555555555555555555555555555555555555555555555555566055555555555555555555555555440000000000000000000044
+0007700000e0e0e00088888055555555555555555560555555555555555555555555555555555605555555555556605555555555440555555555555555555544
+000770000eeeeeee0888888055555555555555555656055555555555555555555555555555555555555555555565560555555555440555555555555555555544
+00700700eeeeeeee0008880055555555555555555555555555555555555555555555555555555555555555555555555555555555440556055555555555555544
+00000000000000008088880055555555555555555555555555555555555555555555555555555555555555555555555555555555440565605555555555555544
+00000000000000000000000855555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555555555544
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555550000000055555544
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555550000000055555544
 00000000555555555555555555555555555555555555555555555555555555555555555555555555566055555555555555555555440555550000000055555544
