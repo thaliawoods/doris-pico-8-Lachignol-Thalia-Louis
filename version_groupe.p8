@@ -8,8 +8,15 @@ __lua__
 function _init()
 	create_player()
 	init_projectiles()
-	create_player()
-	init_projectiles()
+	p = make_ennemi(60,120,1)
+ 	p.cooldown = 0
+ 	p.tag = 1
+ 	p.box = {x1=1,y1=1,x2=6,y2=6}
+ 	for i =1,10 do
+ 	mstr = make_ennemi(rnd(128),rnd(48),192)
+ 	mstr.dy =1
+ 	mstr.tag = 2
+	end
 end
  
 -- mise a jour a chaque frame (60 fois par secondes)
@@ -19,6 +26,8 @@ function _update60()
 	get_vecteur()
 	updt_projectiles()
 	update_camera()
+	move_ennemis()
+	collisions()
 end
 
 -- affichage des sprites
@@ -32,6 +41,10 @@ function _draw()
 
 	-- draw sprit number 1 at xy point
 	affichage_perso()
+
+	draw_ennemis()
+		print(#ennemis,4,64,8)
+	end
 
 	draw_projectiles()
 	draw_ui()
@@ -114,8 +127,10 @@ function create_player()
 		y=5,
 		sprite=61,
 		keys=0,
+		cooldown
 	}
 end
+   
 
 function player_movement()
 	neox = perso.x
@@ -174,46 +189,118 @@ function interact(x, y)
 	open_door(x, y)
 	end
 end
+-->8
+-- ennemis
 
+-- creer ennemis
+function make_ennemi(x,y,sprite)
+	local ennemi = {}
+	ennemi.x = x
+	ennemi.y = y
+	ennemi.sprite = sprite
+	ennemi.dx = 0
+	ennemi.dy = 0
+	ennemi.tag = 0
+	ennemi.box = {x1=0,y1=0,x2=7,y2=7}
+	add(ennemis,ennemi)
+	return ennemi
+end
+
+-- deplacement ennemis
+function move_ennemis()
+	for a in all(ennemis) do
+		a.x += a.dx
+		a.y += a.dy
+    end
+end
+
+   -- dessiner ennemis
+function draw_ennemis()
+	for a in all (ennemis) do
+		spr(a.sprite,a.x,a.y)
+		if (a.x<-8 or a.x>=128 or a.y<-8 or a.y>=128) then
+			del(ennemis,a)
+		end
+    end
+end
+
+-->8
+--collisions
+
+-- creer des boxs
+function get_box(a)
+	local box = {}
+	box.x1 = a.x+a.box.x1
+	box.y1 = a.y+a.box.y1
+	box.x2 = a.x+a.box.x2
+	box.y2 = a.x+a.box.y2
+	return box
+end
+
+-- verifier si collisions
+function check_coll(a,b)
+	if (a == b or a.tag == b.tag) return false
+	local box_a = get_box(a)
+	local box_b = get_box(b)
+	if (box_a.x1 > box_b.x2 or
+	box_a.y1 > box_b.y2 or
+	box_b.x1 > box_a.x2 or
+	box_b.y1 > box_a.y2) then
+		return false
+	else
+		return true
+end
+
+-- collisions
+function collisions()
+	for a in all(ennemis) do
+		for b in all(ennemis) do
+			if (check_coll(a,b) == true) then
+				del(ennemis,a)
+				del(ennemis,b)
+			end
+		end
+	end
+end
 
 -->8
 --tirs
 
-	function get_vecteur()
+function get_vecteur()
 
-		if dir == "up" then
-			vecteurx = 0
-			vecteury = -1
+	if dir == "up" then
+		vecteurx = 0
+		vecteury = -1
+	
+	elseif dir == "diagoh_d" then
+		vecteurx = 1
+		vecteury = -1
+
+	elseif dir == "right" then
+		vecteurx = 1
+		vecteury = 0
+
+	elseif dir == "diagob_d" then
+		vecteurx = 1
+		vecteury = 1
+	
+	elseif dir == "down" then
+		vecteurx = 0
+		vecteury = 1
+	
+	elseif dir == "diagob_g" then
+		vecteurx = -1
+		vecteury = 1
+
+	elseif dir == "left" then
+		vecteurx = -1
+		vecteury = 0
 		
-		elseif dir == "diagoh_d" then
-			vecteurx = 1
-			vecteury = -1
-
-		elseif dir == "right" then
-			vecteurx = 1
-			vecteury = 0
-
-		elseif dir == "diagob_d" then
-			vecteurx = 1
-			vecteury = 1
-		
-		elseif dir == "down" then
-			vecteurx = 0
-			vecteury = 1
-		
-		elseif dir == "diagob_g" then
-			vecteurx = -1
-			vecteury = 1
-
-		elseif dir == "left" then
-			vecteurx = -1
-			vecteury = 0
-			
-		elseif dir == "diagoh_g" then
-			vecteurx = -1
-			vecteury = -1
-		end
+	elseif dir == "diagoh_g" then
+		vecteurx = -1
+		vecteury = -1
 	end
+end
 
 -- creation du tableau des projectiles qui est au depart vide et sera rempli a chaque tir
 function init_projectiles()
@@ -437,7 +524,7 @@ d0dd1d1d1dd10ddddddd1dddd10dd1d1d0dd1d1dddd60d1001d6ddddd10dd1d1d0dd1d11dd110d10
 00155111111101000111100000000000000000000000000000000000000000000000000000000000000000000000000077770000000000000000777700000000
 __gff__
 0000000000000000000000000001010100000000000000000000000000010001000000000000000000000000000101010000000000000000000000000000000000000000000000000000000004040401000100010101000001010000140404040000000000000000000000000404040100000000000000000000000004040401
-0000000000000000000000000505050500000000000000000000000005050505000000000000000000000000050505050000000000000000000000000505050500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0101010101010101010101010505050501010101010101010101010105050505010101010101010101010101050505050101010101010101010101010505050501010101000000000000000001010100010101010000000000000000010101000101010100000000000000000100010001010101000000000000000001000100
 __map__
 cc8182838081828384858687808182838081828388898a8b80ce000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 dc9192939091929394959697909192939091929398999a9b90de000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
