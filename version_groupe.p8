@@ -7,16 +7,13 @@ __lua__
 -- au lancement
 function _init()
 	init_ennemis()
-	make_ennemi(6, 5, 1)
-	make_ennemi(2, 8, 1)
-	make_ennemi(3, 2, 1)
-	make_ennemi(4, 4, 1)
+	make_ennemi(1, 6, 6)
 	create_player()
 	init_projectiles()
 end
  
 -- mise a jour a chaque frame (60 fois par secondes)
-function _update60()
+function _update()
 	player_movement()
 	get_vecteur()
 	updt_projectiles()
@@ -61,7 +58,7 @@ end
 
 
 
-//function camera piece update_camera()
+//--function camera piece update_camera()
 -- camx=flr(perso.x/16)*16
 -- camy=flr(perso.y/16)*16
 -- camera(camx*8,camy*8)
@@ -191,7 +188,7 @@ function init_ennemis()
 end
 
 -- creer ennemis
-function make_ennemi(x,y,sprite)
+function make_ennemi(sprite, x, y)
 	local new_ennemi = {
 	x = x * 8,
 	y = y * 8,
@@ -208,48 +205,31 @@ end
 -- deplacement ennemis
 function move_ennemis()
 
-
-	
 	-- pour chaque ennemi
 	for a in all(ennemis) do
+		-- x suivant = x plus deplacement dx
+		e_neox = a.x + a.dx
 
-		e_neox_1 = a.x + a.x + a.dx
-		e_neoy_1 = a.y + a.y + a.dy
+		-- y suivant = y plus deplacement dy
+		e_neoy = a.y + a.dy
 
 
-		e_neoy_2 = a.y + a.y - a.dy
 
-		e_neox_2 = a.x + a.x - a.dx
-		
-		e_neox_3 = 0
-		e_neoxy_3 = 0
+		-- si la position suivante n'est PAS un mur (flag 0)
+		if not check_flag(0, e_neox, e_neoy) then 
 
-		if not checkflag(0, e_neox_1, e_neoy_1) then 
-			a.x = e_neox_1
-			a.y = e_neoy_1
+			-- avancer normalement
+			a.x = e_neox
+			a.y = e_neoy
 
-		else if not checkflag(0, e_neox_2, e_neoy_1) then 
-			a.x = e_neox_2
-			a.y = e_neoy_1
 
-		else if not checkflag(0, e_neox_1, e_neoy_2) then 
-			a.x = e_neox_1
-			a.y = e_neoy_2
+			-- une fois sorti de la boucle (des qu'une position aleatoire n'est pas un mur)
+			-- on avance
 
-		else if not checkflag(0, e_neox_2, e_neoy_2) then 
-			a.x = e_neox_2
-			a.y = e_neoy_2
-
-		else if not checkflag(0, e_neox_3, e_neoy_3) then 
-			a.x = e_neox_3
-			a.y = e_neoy_3
-
-		else if not checkflag(0, e_neox_3, e_neoy_3) then 
-			a.x = e_neox_3
-			a.y = e_neoy_3
 		end
 	end
 end
+
    -- dessiner ennemis
 function draw_ennemis()
 	for a in all(ennemis) do
