@@ -1,209 +1,278 @@
 pico-8 cartridge // http://www.pico-8.com
 version 38
 __lua__
---sequence principale
+
+-- sequence principale
 
 -- au lancement
 function _init()
 	create_player()
 	init_projectiles()
+	create_player()
+	init_projectiles()
 end
  
 -- mise a jour a chaque frame (60 fois par secondes)
+-- mise a jour a chaque frame (60 fois par secondes)
 function _update60()
 	player_movement()
-	get_dir_vector_()
-	interact()
+	get_vecteur()
 	updt_projectiles()
+	update_camera()
 end
 
 -- affichage des sprites
 function _draw()
 
-	--clear interface
+	-- clear interface
 	cls()
-	--draw map on "left" corner
-	map(0,0,0,0)
-	--draw sprit number 1 at xy point
+
+	-- draw map on "left" corner
+	draw_map()
+
+	-- draw sprit number 1 at xy point
 	affichage_perso()
 
-	-- coin superieur g. camera
-	cam_x = (perso.x - 8)
-	cam_y= (perso.y + 8)
-
 	draw_projectiles()
-
+	draw_ui()
 end
 
 
 
 -->8
---map
+-- map
 
+function draw_map()
+	map(0,0,0,0,128,64)
+end
+
+-- recuperer flag sur la position
 function check_flag(flag,x,y)
-
-	--recuperer flag sur la position
-	sprite = mget(x,y)
-
-	-- renvoie true or false
+	local sprite = mget(x,y)
 	return fget(sprite,flag)
+end
 
+
+
+//function camera piece update_camera()
+//camx=flr(perso.x/16)*16
+//camy=flr(perso.y/16)*16
+//camera(camx*8,camy*8)
+//end
+
+-- recentre la camera
+function  update_camera()
+
+	-- retourne la valeur du milieu lorsqu'une valeur min/max est atteinte
+	camx = mid(0, perso.x-8, 31-15) --(? notion des point et virugule)
+	camy = mid(0, perso.y-8, 31-15)
+	camera(perso.x, perso.y)
+end
+
+-- change la sprite quand la clef est ramasser
+function replace_sprite_key(x, y)
+	sprite = mget(x, y)
+	mset(x, y, sprite+1)
+end
+
+function replace_sprite_door(x, y)
+	sprite = mget(x, y) 
+	mset(3, 7, 64)
+	mset(4, 7, 65)
+end
+
+
+function pick_up_key(x, y)
+	replace_sprite_key(x, y)
+	perso.keys+=1
+end
+
+function open_door(x, y)
+	replace_sprite_door(x, y)
+	perso.keys-=1
+-- on peu rajouter sfx(num) son
 end
 
 
 -->8
---player
+-- player
+
+function affichage_perso()
+
+	-- on cherche a faire avancer le sprite d'une case de 8px par une case
+	spr(perso.sprite,perso.x*8,perso.y*8)
+end
+	
+	
 
 function create_player()
-	--on donne la position du sprite au depart
-	--puis la numero de sprite
-	perso={x=5,y=5,sprite=61}
+--on donne la position du sprite au depart
+--puis la numero de sprite
+--puis initialisation du compteur de clef
+	perso={
+		x=5,
+		y=5,
+		sprite=61,
+		keys=0,
+	}
 end
 
 function player_movement()
-	neox=perso.x
-	neoy=perso.y
+	neox = perso.x
+	neoy = perso.y
 
--- tir quand x est maintenu appuye
 	if (btn(❎)) then 
 		shoot()
 	end
 	
 	-- mouv. selon touche pressee
 	if (btn(⬆️)) then 
-		neoy-=1
-		dir="up"
+		neoy -= 1
+		dir = "up"
 
 	elseif ((btn(➡️))and(btn(⬆️))) then
-		dir="diagoh_d"
+		dir = "diagoh_d"
 
 	elseif (btn(➡️)) then 
-		neox+=1 
-		dir="right"
+		neox += 1 
+		dir = "right"
 
 	elseif ((btn(➡️))and(btn(⬇️))) then 
-		dir="diagob_d"
+		dir = "diagob_d"
 
 	elseif (btn(⬇️)) then 
-		neoy+=1	
-		dir="down"
+		neoy += 1	
+		dir = "down"
 
 	elseif ((btn(⬅️))and(btn(⬇️))) then 
-		dir="diagob_g"
+		dir = "diagob_g"
 
 	elseif (btn(⬅️)) then 
-		neox-=1 
-		dir="left"
+		neox -= 1 
+		dir = "left"
 
 	elseif ((btn(⬅️))and(btn(⬆️))) then 
-		dir="diagob_g"
-	end
-
---condition si check-flag 
---renvoi true donc 0	
-	if check_flag(0,neox,neoy)
-		then --on avance pas 
-		else --si pas de flag on avance
-			perso.x=mid(0,neox,127)
-			perso.y=mid(0,neoy,63)
-	--la commande mid fait qu'une fois les intervalles depasser on revien a la valeur du milieu)
-		end
+		dir = "diagob_g"
 	end
 	
-function affichage_perso()
-	--on cherche a faire avancer le sprite d'une case de 8px par une case
-	spr(perso.sprite,perso.x*8,perso.y*8)
+	interact(neox,neoy)
+	
+	if not check_flag(0, neox, neoy) then
+		perso.x = mid(0, neox, 127)
+		perso.y = mid(0, neoy, 63)
+	else
+	end
 end
+		
+function interact(x, y)
+
+	if check_flag(1, x, y) then
+	pick_up_key(x, y)
+
+	elseif check_flag(2, x, y)
+	and perso.keys > 0 then
+	open_door(x, y)
+	end
+end
+
+
 -->8
 --tirs
 
--- donner une vitesse pour
--- le depl. des proj.
--- sur les axes x et y
--- selon dir. mouv.
--- 0 = bouge pas
--- + = bouge vers dr. ou bas
--- - = vers gch. ou haut
-	function get_dir_vector_()
+	function get_vecteur()
 
 		if dir == "up" then
-			dir_vector_x = 0
-			dir_vector_y = -1
+			vecteurx = 0
+			vecteury = -1
 		
-		elseif dir=="diagoh_d" then
-			dir_vector_x = 1
-			dir_vector_y = -1
+		elseif dir == "diagoh_d" then
+			vecteurx = 1
+			vecteury = -1
 
-		elseif dir=="right" then
-			dir_vector_x = 1
-			dir_vector_y = 0
+		elseif dir == "right" then
+			vecteurx = 1
+			vecteury = 0
 
-		elseif dir=="diagob_d" then
-			dir_vector_x = 1
-			dir_vector_y = 1
+		elseif dir == "diagob_d" then
+			vecteurx = 1
+			vecteury = 1
 		
-		elseif dir=="down" then
-			dir_vector_x = 0
-			dir_vector_y = 1
+		elseif dir == "down" then
+			vecteurx = 0
+			vecteury = 1
 		
-		elseif dir=="diagob_g" then
-			dir_vector_x = -1
-			dir_vector_y = 1
+		elseif dir == "diagob_g" then
+			vecteurx = -1
+			vecteury = 1
 
 		elseif dir == "left" then
-			dir_vector_x = -1
-			dir_vector_y = 0
-		
+			vecteurx = -1
+			vecteury = 0
+			
 		elseif dir == "diagoh_g" then
-			dir_vector_x = -1
-			dir_vector_y = -1
+			vecteurx = -1
+			vecteury = -1
 		end
 	end
 
--- cree le tableau des projectiles qui est au depart vide et sera rempli れき chaque tir
+-- creation du tableau des projectiles qui est au depart vide et sera rempli a chaque tir
 function init_projectiles()
 	projectiles = {}
 end
 
--- fonction quand le joueur tire
+-- fonction appeler quand le joueur tire
 function shoot()
 
-    -- cree une variable temporaire qui prends en compte la position actuelle du joueur
+-- creation d'une variable temporaire qui prends en compte la position actuelle du joueur
 	local new_projectile = {
-		-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
-		x=neox*8,
-		y=neoy*8,
-		neodir_vector_x = dir_vector_x,
-		neodir_vector_y = dir_vector_y,
+-- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
+		x = neox*8,
+		y = neoy*8,
+		neovecteurx = vecteurx,
+		neovecteury = vecteury,
 		}
--- on ajoute ce projectile qu'on vient de crれたer dans le tableau des projectiles
-add(projectiles, new_projectile)
+
+-- on ajoute ce projectile qu'on vient de creer dans le tableau des projectiles
+	add(projectiles, new_projectile)
 end
 
--- fait se dれたplacer le projectile en temps rれたel
+-- fait se deplacer le projectile en temps reel
 function updt_projectiles()
+
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
+
 	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
-		proj.x=proj.x+proj.neodir_vector_x
-		proj.y=proj.y+proj.neodir_vector_y
+		proj.x = proj.x+proj.neovecteurx
+		proj.y = proj.y+proj.neovecteury
 	
 
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
-		if (proj.x<-8 or proj.y<-8) then del(projectiles, proj)
-		
+		if (proj.x < -8 or proj.y < -8) 
+			then del(projectiles, proj)
 		end
 	end
-	end
+end
 
 -- affiche le sprite du projectile	
 function draw_projectiles()
+
 	-- pour tous les projectiles du tableau
-	for proj in all(projectiles) do
+	for proj in all(projectiles)
+	do
 		-- aficher la sprite num. 128 aux coordonnれたes x et y du projectile
-		spr(128,proj.x,proj.y)
+		spr(128, proj.x, proj.y)
 	end
+end
+-->8
+function draw_ui()
+	camera()
+	palt(0, false)
+	palt(12, true)
+	spr(62, 2, 2)
+	palt()
+	print_outline("x"..perso.keys, 10, 2)
 end
 
 
@@ -230,7 +299,13 @@ function interact()
 end
 
 
-
+function print_outline(text, x, y)
+	print(text, x-1, y, 0)
+	print(text, x+1, y, 0)
+	print(text, x, y-1, 0)
+	print(text, x, y+1, 0)
+	print(text, x, y, 7)
+end
 __gfx__
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
