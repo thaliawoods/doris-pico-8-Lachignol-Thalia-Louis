@@ -207,12 +207,49 @@ end
 
 -- deplacement ennemis
 function move_ennemis()
-	for a in all(ennemis) do
-		a.x += a.dx
-		a.y += a.dy
-    end
-end
 
+
+	
+	-- pour chaque ennemi
+	for a in all(ennemis) do
+
+		e_neox_1 = a.x + a.x + a.dx
+		e_neoy_1 = a.y + a.y + a.dy
+
+
+		e_neoy_2 = a.y + a.y - a.dy
+
+		e_neox_2 = a.x + a.x - a.dx
+		
+		e_neox_3 = 0
+		e_neoxy_3 = 0
+
+		if not checkflag(0, e_neox_1, e_neoy_1) then 
+			a.x = e_neox_1
+			a.y = e_neoy_1
+
+		else if not checkflag(0, e_neox_2, e_neoy_1) then 
+			a.x = e_neox_2
+			a.y = e_neoy_1
+
+		else if not checkflag(0, e_neox_1, e_neoy_2) then 
+			a.x = e_neox_1
+			a.y = e_neoy_2
+
+		else if not checkflag(0, e_neox_2, e_neoy_2) then 
+			a.x = e_neox_2
+			a.y = e_neoy_2
+
+		else if not checkflag(0, e_neox_3, e_neoy_3) then 
+			a.x = e_neox_3
+			a.y = e_neoy_3
+
+		else if not checkflag(0, e_neox_3, e_neoy_3) then 
+			a.x = e_neox_3
+			a.y = e_neoy_3
+		end
+	end
+end
    -- dessiner ennemis
 function draw_ennemis()
 	for a in all(ennemis) do
