@@ -22,12 +22,16 @@ end
 -- mise a jour a chaque frame (60 fois par secondes)
 -- mise a jour a chaque frame (60 fois par secondes)
 function _update60()
+	if(not active_text) then
 	player_movement()
 	get_vecteur()
 	updt_projectiles()
 	update_camera()
 	move_ennemis()
 	collisions()
+	else if (btnp(☉)) extcmd("reset")
+	end
+	end
 end
 
 -- affichage des sprites
@@ -47,9 +51,11 @@ function _draw()
 	end
 
 	draw_projectiles()
+	
 	draw_ui()
+	draw_text()
 end
-
+end
 
 
 -->8
@@ -171,7 +177,7 @@ function player_movement()
 	end
 	
 	interact(neox,neoy)
-	
+-- flag 0 pour les murs
 	if not check_flag(0, neox, neoy) then
 		perso.x = mid(0, neox, 127)
 		perso.y = mid(0, neoy, 63)
@@ -180,14 +186,19 @@ function player_movement()
 end
 		
 function interact(x, y)
-
+--flag 3 pour le texte
+	if check_flag(3, x, y)
+	then active_text=get_text(x,y)
+	end
+--flag 1 pour les clef
 	if check_flag(1, x, y) then
 	pick_up_key(x, y)
-
+--flag 2 pour les portes
 	elseif check_flag(2, x, y)
 	and perso.keys > 0 then
 	open_door(x, y)
 	end
+
 end
 -->8
 -- ennemis
@@ -348,15 +359,17 @@ function draw_projectiles()
 	-- pour tous les projectiles du tableau
 	for proj in all(projectiles)
 	do
-		-- aficher la sprite num. 128 aux coordonnれたes x et y du projectile
+	-- aficher la sprite num. 128 aux coordonnees x et y du projectile
 		spr(128, proj.x, proj.y)
 	end
 end
 -->8
 function draw_ui()
 	camera()
+-- joue avec les notion de transparance en fonction de la couleur
 	palt(0, false)
 	palt(12, true)
+-- definition de la sprite et de ces coordonee
 	spr(62, 2, 2)
 	palt()
 	print_outline("x"..perso.keys, 10, 2)
@@ -393,6 +406,46 @@ function print_outline(text, x, y)
 	print(text, x, y+1, 0)
 	print(text, x, y, 7)
 end
+
+-->8
+--text code
+
+function text_setup()
+-- differents texte a ajouter
+	texts = {}
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+
+
+end
+
+function add_text(x, y, message)
+	texts[x+y*128] = message
+end
+
+function get_text(x,y)
+	return texts[x+y*128]
+end
+
+function draw_text()
+-- affiche le text en fonction de la position perso
+	if (active_text) then
+	textx=perso.x*8+4
+	texty=perso.y*8+48
+
+	rectfill(textx,texty,textx+119,texty+31,7)
+	print(active_text,textx+4,texty+4,1)
+-- message pour indiquer bouton de sortie de l'ecran texte
+	print("haut pour fermer",textx+4,texty+23,6)
+end
+-- mis en place du bouton de sortie 
+	if (btn(⬆️))then 
+	active_text = nil
+end
+end
+
 __gfx__
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
 00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
