@@ -46,7 +46,6 @@ function _draw()
 	draw_ui()
 	draw_text()
 end
-end
 
 
 
