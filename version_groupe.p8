@@ -23,9 +23,8 @@ function _update60()
 	updt_projectiles()
 	update_camera()
 	move_ennemis()
-	collisions()
+	--collisions()
 	else if (btnp(☉)) extcmd("reset")
-	end
 	end
 end
 
@@ -48,7 +47,7 @@ function _draw()
 	draw_ui()
 	draw_text()
 end
-end
+
 
 
 -->8
