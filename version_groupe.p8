@@ -14,7 +14,6 @@ end
  
 -- mise a jour a chaque frame (60 fois par secondes)
 function _update()
-function _update60()
 	if(not active_text) then
 	player_movement()
 	get_vecteur()
