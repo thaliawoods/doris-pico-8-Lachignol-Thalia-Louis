@@ -131,22 +131,19 @@ end
 
 ---- EN CHANTIER ----
 function replace_sprite_door(x, y)
-	sprite_table = {76, 92, 108, 124, 77, 93, 109, 125, 78, 94, 110, 126, 79, 95, 111, 127}
 
-	while (check_flag(2, x, y)) do
-	x -= 1
+	while (check_flag(2, (x-1), (y))) do
+	x = x-1
 	end
 
-	while (check_flag(2, x, y)) do
-	y -= 1
+	while (check_flag(2, (x), (y-1))) do
+	y = y - 1
 	end
 
-
-	local index = 1
-	for  i = 1, 4 do
+	local first_sprite = mget(x,y)
+	for  i = 0, 3 do
 		for  j = 0, 3 do
-					mset(x + i, y + j, sprite_table[index])
-					index += 1
+					mset(x + i, y + j, 76 + i + j * 16)
 		end
 	end
 end
