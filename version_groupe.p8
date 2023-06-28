@@ -7,15 +7,13 @@ __lua__
 -- au lancement
 function _init()
 	init_ennemis()
-	make_ennemi(6, 5, 1)
-	make_ennemi(2, 8, 1)
-	make_ennemi(3, 2, 1)
-	make_ennemi(4, 4, 1)
+	make_ennemi(5, 8, 8)
 	create_player()
 	init_projectiles()
 end
  
 -- mise a jour a chaque frame (60 fois par secondes)
+function _update()
 function _update60()
 	if(not active_text) then
 	player_movement()
@@ -31,13 +29,13 @@ end
 -- affichage des sprites
 function _draw()
 
-	-- clear interface
+	-- nettoyer l'interface
 	cls()
 
-	-- draw map on "left" corner
+	-- afficher la map
 	draw_map()
 
-	-- draw sprit number 1 at xy point
+	-- afficher personnages, projectiles et UI
 	affichage_perso()
 
 	draw_ennemis()
@@ -50,6 +48,7 @@ end
 
 
 
+
 -->8
 -- map
 
@@ -59,13 +58,17 @@ end
 
 -- recuperer flag sur la position
 function check_flag(flag,x,y)
+
+	-- recuperer le numero de sprite
 	local sprite = mget(x,y)
+
+	-- retourner un booleen qui indique si le drapeau est present sur la sprite
 	return fget(sprite,flag)
 end
 
 
 
-//function camera piece update_camera()
+//--function camera piece update_camera()
 -- camx=flr(perso.x/16)*16
 -- camy=flr(perso.y/16)*16
 -- camera(camx*8,camy*8)
@@ -77,12 +80,18 @@ function  update_camera()
 	-- retourne la valeur du milieu lorsqu'une valeur min/max est atteinte
 	camx = mid(0, perso.x-8, 31-15) --(? notion des point et virugule)
 	camy = mid(0, perso.y-8, 31-15)
-	camera(perso.x, perso.y)
+
+	-- centre la camera avec un * 8 pour passer d'une valeur en pixels a une valeur en case
+	camera(camx * 8, camy * 8)
 end
 
 -- change la sprite quand la clef est ramasser
 function replace_sprite_key(x, y)
+
+	-- recuperer le numero de sprite
 	sprite = mget(x, y)
+
+	-- changer la sprite pour la sprite suivante a la position 
 	mset(x, y, sprite+1)
 end
 
@@ -94,14 +103,20 @@ end
 
 
 function pick_up_key(x, y)
+
+	-- remplacer la clef posee au sol par une case sol vide
 	replace_sprite_key(x, y)
+
+	-- incrementer le compteur de clees
 	perso.keys+=1
 end
 
 function open_door(x, y)
 	replace_sprite_door(x, y)
+
+	-- decrementer le compteur de clef
 	perso.keys-=1
--- on peu rajouter sfx(num) son
+	-- on peux rajouter sfx(num) son
 end
 
 
@@ -111,12 +126,13 @@ end
 function affichage_perso()
 
 	-- on cherche a faire avancer le sprite d'une case de 8px par une case
-	spr(perso.sprite,perso.x*8,perso.y*8)
+	spr(perso.sprite, perso.x*8, perso.y*8)
 end
 	
 	
 
 function create_player()
+	
 --on donne la position du sprite au depart
 --puis la numero de sprite
 --puis initialisation du compteur de clef
@@ -131,10 +147,14 @@ end
    
 
 function player_movement()
+
+	-- on recupere la position du joueur
 	neox = perso.x
 	neoy = perso.y
 
+	-- si X est pressee
 	if (btn(❎)) then 
+		-- on cree un projectile
 		shoot()
 	end
 	
@@ -168,26 +188,33 @@ function player_movement()
 		dir = "diagob_g"
 	end
 	
-	interact(neox,neoy)
--- flag 0 pour les murs
+	-- si on passe sur une case avec un objet, on le recupere
+	interact(neox, neoy)
+	
+	-- on verifie que la case n'a pas de flag qui indiquerai qu'elle est infranchissable
 	if not check_flag(0, neox, neoy) then
 		perso.x = mid(0, neox, 127)
 		perso.y = mid(0, neoy, 63)
-	else
 	end
 end
-		
+
+-- fonction pour interagir avec les objets
 function interact(x, y)
---flag 3 pour le texte
-	if check_flag(3, x, y)
-	then active_text=get_text(x,y)
-	end
---flag 1 pour les clef
+
+	-- si un flag indique la presence d'une clef
 	if check_flag(1, x, y) then
+
+	-- on la ramsse
 	pick_up_key(x, y)
+	
+	-- sinon, si le flag indique une porte
 --flag 2 pour les portes
 	elseif check_flag(2, x, y)
+
+	-- et que le joueur a des clefs
 	and perso.keys > 0 then
+
+	-- la porte s'ouvre
 	open_door(x, y)
 	end
 
@@ -195,16 +222,20 @@ end
 -->8
 -- ennemis
 
+-- cree un tableau vide pour les ennemis
 function init_ennemis()
 	ennemis = {}
 end
 
--- creer ennemis
-function make_ennemi(x,y,sprite)
+-- creer ennemis avec
+-- num. de sprite
+-- position
+-- ?
+function make_ennemi(sprite, x, y)
 	local new_ennemi = {
-	x = x * 8,
-	y = y * 8,
 	sprite = sprite,
+	x = x,
+	y = y,
 	dx = 1,
 	dy = 1,
 	tag = 1,
@@ -216,18 +247,90 @@ end
 
 -- deplacement ennemis
 function move_ennemis()
+
+	-- pour chaque ennemi
 	for a in all(ennemis) do
-		a.x += a.dx
-		a.y += a.dy
-    end
+
+		-- si l'ennemi est a moins de 8 cases du perso en x
+		if ((perso.x - a.x) < 8) or ((perso.x - a.x) > -8) then
+
+			-- si le perso est sur une case de pos. x plus eleve
+			 if (perso.x > a.x) then
+				-- on incremente la position cible de l'ennemi
+				e_neox = a.x + (1/10)
+				
+			-- si la case a une pos. x moins eleve
+			elseif (perso.x < a.x) then
+
+				-- on decremente
+				e_neox = a.x - (1/10)
+			else 
+
+				-- sinon, on garde le mれちme angle
+				e_neox = a.x
+			end
+		end			
+
+		-- meme logique pour y
+		if ((perso.y - a.y) < 8) or ((perso.x - a.y) > -8) then
+
+			if (perso.y > a.y) then
+				e_neoy = a.y + (1/10)
+
+			elseif (perso.y < a.y) then
+					e_neoy = a.y - (1/10)
+
+			else 
+				e_neoy = a.x
+			end
+		end
+		
+
+		-- si la position suivante n'est PAS un mur (flag 0)
+		if not check_flag(0, e_neox, e_neoy)
+		then 
+
+			-- avancer normalement
+			a.x = e_neox
+			a.y = e_neoy
+		else
+			-- si c'est un mur
+			while check_flag(0, e_neox, e_neoy) do
+				-- on genere des positions cibles aleatoires entre -1 et 1
+				randx = ((rnd(3)) -1)
+				randy = ((rnd(3)) -1)
+				
+				-- on actualise la valeur de e_neox et e_neoy et on regarde si れせa passe
+				e_neox = a.x + randx
+
+				e_neoy = a.y + randy
+			end
+
+			-- une fois qu'on a trouvれた une valeur qui marche, on y va
+			a.x = e_neox
+			a.y = e_neoy
+		end
+	end
 end
 
    -- dessiner ennemis
 function draw_ennemis()
+
+	-- pour tous les ennemis
 	for a in all(ennemis) do
-		spr(a.sprite,a.x,a.y) end
-		--if (a.x<-8 or a.x>=128 or a.y<-8 or a.y>=128) then
-			--del(ennemis,a
+		
+		-- on rends le bleu clair transparent pour avoir un fond transparent
+		palt(12, true)
+
+		-- on rend le noir opaque pour afficher le contour du sprite
+		palt(0, false)
+
+		-- on affiche le sprite en passant de pixels a cases
+		spr(a.sprite, a.x * 8, a.y * 8, 2, 2) 
+
+		-- on retabli la transparence par defaut 
+		palt()
+	end
 end
 
 -->8
@@ -247,8 +350,8 @@ end
 
 -- verifier si collisions
 function check_coll(a,b)
+
 	if (a == b or a.tag == b.tag) return false
-	
 	local box_a = get_box(a)
 	local box_b = get_box(b)
 
@@ -315,7 +418,7 @@ function init_projectiles()
 	projectiles = {}
 end
 
--- fonction appeler quand le joueur tire
+-- fonction appelee quand le joueur tire
 function shoot()
 
 -- creation d'une variable temporaire qui prends en compte la position actuelle du joueur
@@ -323,8 +426,8 @@ function shoot()
 -- neox est une valeur en pixels, on multiplie par 8 pour avoir une valeur en cases
 		x = neox * 8,
 		y = neoy * 8,
-		neovecteurx = vecteurx,
-		neovecteury = vecteury,
+		neovecteurx = vecteurx * 4,
+		neovecteury = vecteury * 4,
 		}
 
 -- on ajoute ce projectile qu'on vient de creer dans le tableau des projectiles
@@ -337,14 +440,14 @@ function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
 
-	 -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
-		proj.x = proj.x+proj.neovecteurx
-		proj.y = proj.y+proj.neovecteury
+	    -- regarde l'orientation au moment du tir pour savoir dans quelle direction le projectile part
+		proj.x = proj.x + proj.neovecteurx
+		proj.y = proj.y + proj.neovecteury
 	
 
 		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
-		if (proj.x < -8 or proj.y < -8) 
+		if check_flag(0, proj.x, proj.y)
 			then del(projectiles, proj)
 		end
 	end
@@ -356,31 +459,45 @@ function draw_projectiles()
 	-- pour tous les projectiles du tableau
 	for proj in all(projectiles)
 	do
+		-- aficher la sprite du projectile aux coordonnees
+		spr(2, proj.x, proj.y)
 	-- aficher la sprite num. 128 aux coordonnees x et y du projectile
 		spr(128, proj.x, proj.y)
 	end
 end
 -->8
+
+-- affichage de l'ui
 function draw_ui()
+	-- recentrage de la camera
 	camera()
--- joue avec les notion de transparance en fonction de la couleur
+
+	-- transparence des couleurs
 	palt(0, false)
 	palt(12, true)
--- definition de la sprite et de ces coordonee
-	spr(62, 2, 2)
+
+	-- afficher la sprite des clefs
+	spr(3, 2, 2, 2, 2)
+
+	-- reset transparence
 	palt()
-	print_outline("x"..perso.keys, 10, 2)
+
+	-- afficher le compteur de clefs
+	print_outline("x".. perso.keys, 20, 4)
 end
 
 
 -->8
 -- interactions
 
-function interact()
+function interact2()
 
+	--  j'ai tente des trucs mais jy comprends plus rien
 	if (dir_vector_x) and (dir_vector_y) then
+
 		object_x = (perso.x + dir_vector_x)
 		object_y = (perso.y + dir_vector_y)
+	
 	else 
 		object_x = (perso.x + 1)
 		object_y = (perso.y - 1)
@@ -395,7 +512,7 @@ function interact()
 	end
 end
 
-
+-- fonction pour afficher quelquechose avec du contour
 function print_outline(text, x, y)
 	print(text, x-1, y, 0)
 	print(text, x+1, y, 0)
@@ -444,38 +561,38 @@ end
 end
 
 __gfx__
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-000000000000ee005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-0070070000eeeee05555555555555555555555555555555555555555555555555555555555566055555555555555555555555555440000000000000000000044
-0007700000e0e0e05566055555555555555555555560555555555555555555555555555555555605555555555556605555555555440555555555555555555544
-000770000eeeeeee5655605555555555555555555656055555555555555555555555555555555555555555555565560555555555440555555555555555555544
-00700700eeeeeeee5555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440556055555555555555544
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440565605555555555555544
-00000000000000005555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555555555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555550000000055555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555550000000055555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555566055555555555555555555440555550000000055555544
-00000000555555555555555555555555556055555555555555555555555555555555555555555555655660555555555555555555440555550000000055555544
-00000000555555555556660555555555565555555555555555555555555555555555555555555555555556055555555555555555440555550000000055555544
-00000000555555555565560555555555555555555555555555555555555566055555555555555555555555555555555555555555440555550000000055555544
-00000000555555555655556055555555555555555555555555555555555655605555555555555555555555555555555555555555440555550000000055555544
-00000000555555555555555555555555555555555555555555555555556555555555555555555555555555555555555555555555440555550000000055555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555555555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555556605544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555440555555555555555560544
-00000000555555555555555555555555555666055555555555555555555555555555555555555555555555555555555555555555440555555555555555555544
-00000000555555555555555555555555556555605555555555555555555555555556055555555555555555555555555555660555440555555555555555555544
-00000000555555555555555555555555555555555555555555555555555555555555660555555555555555555555555556656555440555555555555555555544
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555444444444444444444444444
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555000000000000000000000000
-00000000555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555000000000000000000000000
-00000000555555555555555555555555555555555555555555566055555555555555555555555555555555555555555555555555000fff000000000000000000
-0000000055605555555555555555555555555555555555555565560555555555555555555555555555555555555555555555555500f0f0f00000000000000000
-0000000056560555555555555555555555555555555555555655555555555555555555555555555555556605555555555555555500f0f0f00000000000000000
-00000000555555555555555555555555555555555555555555555555555555555555555555555555556655605555555555555555f00f0f0f0000000000000000
-000000005555555555555555555555555555555555555555555555555555555555555555555555555655555555555555555555550fffffff0000000000000000
-0000000055555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555500fffff00000000000000000
+000000000000000000000080ccccccccc000cccccccccccccccc00cccccccccccccc000000cccccccccccccc5555555555555555444444444444444444444444
+000000000000ee0000000000cccccccc0a990cccccccccccccc0ee0cccccccccccc06666660ccccccccccccc5555555555555555444444444444444444444444
+0070070000eeeee000888800ccccccc0a94990cccccc0000ccc0880ccccccccccc0666666660cccccccccccc5555555555555555440000000000000000000044
+0007700000e0e0e000888880cccccc0a9404990cccc0eeee0ccc00cccccccccccc0666666660cccccccccccc5556605555555555440555555555555555555544
+000770000eeeeeee08888880cccccc0940c0490ccc0eeeeee00ccccccccccccccc0666666660cccccccccccc5565560555555555440555555555555555555544
+00700700eeeeeeee00088800cccccc099404940ccc0eeeeeeee00ccccccccccccc0666666660cccccccccccc5555555555555555440556055555555555555544
+000000000000000080888800cccccc09994940ccc0ee77eeeeeee0ccccc00cccccc066666660cccccccccccc5555555555555555440565605555555555555544
+000000000000000000000008ccccc0a949940cccc0e7067ee77ee0cccc0660cccccc06666600cccccccccccc5555555555555555440555555555555555555544
+000000005555555555555555cccc0a940000ccccc0eeeeee7067ee0cc060060c0cccc006666600cccccccccc5555555555555555440555550000000055555544
+000000005555555555555555ccc0a940cccccccc0ee76eeeeeeeee0ccc00c06060c0066666666600cccccccc5555555555555555440555550000000055555544
+000000005555555555555555cc0a940ccccccccc0ee767eee76eeee0cc0600660c066666666666660ccccccc5555555555555555440555550000000055555544
+000000005555555555555555c0a94040cccccccc0eeee776776eee80c0676660c06666666666666660cccccc5555555555555555440555550000000055555544
+0000000055555555555666050a940c0ccccccccc088eee767eeee880cc0606660666666666666666660ccccc5555555555555555440555550000000055555544
+000000005555555555655605c04040ccccccccccc0088eeeeeee800cccc0066666666666666666666660cccc5555555555555555440555550000000055555544
+000000005555555556555560cc040cccccccccccccc0088888880cccccccc006666606666666660666660ccc5555555555555555440555550000000055555544
+000000005555555555555555ccc0ccccccccccccccccc0000000ccccccccccc0666006666666660066660ccc5555555555555555440555550000000055555544
+00000000555555555555555555555555555555555555555555555555cccccccc000cc066666660cc06660ccc5555555555555555440555555555555555555544
+00000000555555555555555555555555555555555555555555555555cccccccccccccc0666660ccc0660cccc5555555555555555440555555555555556605544
+00000000555555555555555555555555555555555555555555555555ccccccccccccc066666660cc0660cccc5555555555555555440555555555555555560544
+00000000555555555555555555555555555666055555555555555555cccccccccccc0666666660cc0660cccc5555555555555555440555555555555555555544
+00000000555555555555555555555555556555605555555555555555ccccccccccc06666666666006660cccc5555555555660555440555555555555555555544
+00000000555555555555555555555555555555555555555555555555cccccccccc066666666666066660cccc5555555556656555440555555555555555555544
+00000000555555555555555555555555555555555555555555555555ccccccccc0666666066666066660cccc5555555555555555444444444444444444444444
+00000000555555555555555555555555555555555555555555555555ccccccccc0666660c06666006660cccc5555555555555555444444444444444444444444
+00000000555555555555555555555555555555555555555555555555cccccccc0666660ccc066660000ccccc5555555555555555000000000000000000000000
+00000000555555555555555555555555555555555555555555555555cccccccc066660cccc066660cccccccc5555555555555555000000000000000000000000
+00000000555555555555555555555555555555555555555555566055cccccccc06660cccccc066660ccccccc5555555555555555000fff000000000000000000
+00000000556055555555555555555555555555555555555555655605ccccccccc0660ccccccc06660ccccccc555555555555555500f0f0f00000000000000000
+00000000565605555555555555555555555555555555555556555555ccccccccc0660ccccccc06660ccccccc555555555555555500f0f0f00000000000000000
+00000000555555555555555555555555555555555555555555555555cccccccc06660cccccccc06660cccccc5555555555555555f00f0f0f0000000000000000
+00000000555555555555555555555555555555555555555555555555ccccccc0666660cccccc0666660ccccc55555555555555550fffffff0000000000000000
+00000000555555555555555555555555555555555555555555555555cccccc0666660cccccccc0666660cccc555555555555555500fffff00000000000000000
 00000000000000000000000000000000000000000000000000000000009000000000000000000000000000000000000077707777777777777777777777777077
 00000000000000000000000000000000000000000000000000000009990000000000000000000000000000000000000076607767677666666666666767667067
 0000000000000000000000000000000000000000000000000000009aa90000000000000000000000000000000000000076707676766666666666666676777067
