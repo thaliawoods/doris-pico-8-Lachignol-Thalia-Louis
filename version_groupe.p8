@@ -6,6 +6,8 @@ __lua__
 
 -- au lancement
 function _init()
+ _update = menu_update
+ _draw = menu_draw
 	init_ennemis()
 	make_ennemi(5, 8, 8)
 	create_player()
@@ -15,14 +17,18 @@ function _init()
 end
  
 -- mise a jour a chaque frame (60 fois par secondes)
-function _update()
+function game_update()
 	if(not active_text) then
 	player_movement()
 	get_vecteur()
 	updt_projectiles()
 	update_camera()
 	move_ennemis()
+	update_enemis()
 	--collisions()
+
+	-- pour quitter le message
+	else if (btnp(q)) extcmd("reset")
 
 	-- pour quitter le message
 	else if (btnp(q)) extcmd("reset")
@@ -30,7 +36,7 @@ function _update()
 end
 
 -- affichage des sprites
-function _draw()
+function game_draw()
 
 	-- nettoyer l'interface
 	cls()
@@ -47,6 +53,19 @@ function _draw()
 	
 	draw_ui()
 	draw_text()
+end
+
+function menu_draw()
+ map(33,0,0,0,16,16)
+ print("press x+c",50,90,7)
+end
+
+function menu_update()
+ if (btn(❎)) and (btn(🅾️)) then
+ -- changer de scene
+  _update = game_update
+  _draw = game_draw
+ end 
 end
 
 
