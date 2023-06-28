@@ -94,11 +94,21 @@ function replace_sprite_key(x, y)
 	mset(x, y, sprite+1)
 end
 
+
+---- EN CHANTIER ----
 function replace_sprite_door(x, y)
-	sprite = mget(x, y) 
-	mset(3, 7, 64)
-	mset(4, 7, 65)
+	sprite = mget(x,y)
+	while (check_flag(2, x, y)) do
+	x -= 1
+	end
+	while (check_flag(2, x, y)) do
+		y += 1
+	end
+	for y, y - 1 do	
+	mset(x, y, sprite + 1)
+	mset(x, y, 65)
 end
+---- EN CHANTIER ----
 
 
 function pick_up_key(x, y)
