@@ -14,12 +14,17 @@ end
  
 -- mise a jour a chaque frame (60 fois par secondes)
 function _update()
+function _update60()
+	if(not active_text) then
 	player_movement()
 	get_vecteur()
 	updt_projectiles()
 	update_camera()
 	move_ennemis()
-	--collisions()
+	collisions()
+	else if (btnp(☉)) extcmd("reset")
+	end
+	end
 end
 
 -- affichage des sprites
@@ -37,8 +42,10 @@ function _draw()
 	draw_ennemis()
 
 	draw_projectiles()
-
+	
 	draw_ui()
+	draw_text()
+end
 end
 
 
@@ -53,10 +60,10 @@ end
 -- recuperer flag sur la position
 function check_flag(flag,x,y)
 
-	-- recuperer le numéro de sprite
+	-- recuperer le numero de sprite
 	local sprite = mget(x,y)
 
-	-- retourner un booleen qui indique si le drapeau est présent sur la sprite
+	-- retourner un booleen qui indique si le drapeau est present sur la sprite
 	return fget(sprite,flag)
 end
 
@@ -75,7 +82,7 @@ function  update_camera()
 	camx = mid(0, perso.x-8, 31-15) --(? notion des point et virugule)
 	camy = mid(0, perso.y-8, 31-15)
 
-	-- centre la caméra avec un * 8 pour passer d'une valeur en pixels à une valeur en case
+	-- centre la camera avec un * 8 pour passer d'une valeur en pixels a une valeur en case
 	camera(camx * 8, camy * 8)
 end
 
@@ -85,7 +92,7 @@ function replace_sprite_key(x, y)
 	-- recuperer le numero de sprite
 	sprite = mget(x, y)
 
-	-- changer la sprite pour la sprite suivante à la position 
+	-- changer la sprite pour la sprite suivante a la position 
 	mset(x, y, sprite+1)
 end
 
@@ -98,17 +105,17 @@ end
 
 function pick_up_key(x, y)
 
-	-- remplacer la clé posée au sol par une case sol vide
+	-- remplacer la clef posee au sol par une case sol vide
 	replace_sprite_key(x, y)
 
-	-- incrementer le compteur de clés
+	-- incrementer le compteur de clees
 	perso.keys+=1
 end
 
 function open_door(x, y)
 	replace_sprite_door(x, y)
 
-	-- decrementer le compteur de clé
+	-- decrementer le compteur de clef
 	perso.keys-=1
 	-- on peux rajouter sfx(num) son
 end
@@ -146,7 +153,7 @@ function player_movement()
 	neox = perso.x
 	neoy = perso.y
 
-	-- si X est pressé
+	-- si X est pressee
 	if (btn(❎)) then 
 		-- on cree un projectile
 		shoot()
@@ -195,13 +202,14 @@ end
 -- fonction pour interagir avec les objets
 function interact(x, y)
 
-	-- si un flag indique la présence d'une clef
+	-- si un flag indique la presence d'une clef
 	if check_flag(1, x, y) then
 
 	-- on la ramsse
 	pick_up_key(x, y)
 	
 	-- sinon, si le flag indique une porte
+--flag 2 pour les portes
 	elseif check_flag(2, x, y)
 
 	-- et que le joueur a des clefs
@@ -210,6 +218,7 @@ function interact(x, y)
 	-- la porte s'ouvre
 	open_door(x, y)
 	end
+
 end
 -->8
 -- ennemis
@@ -258,7 +267,7 @@ function move_ennemis()
 				e_neox = a.x - (1/10)
 			else 
 
-				-- sinon, on garde le même angle
+				-- sinon, on garde le mれちme angle
 				e_neox = a.x
 			end
 		end			
@@ -292,13 +301,13 @@ function move_ennemis()
 				randx = ((rnd(3)) -1)
 				randy = ((rnd(3)) -1)
 				
-				-- on actualise la valeur de e_neox et e_neoy et on regarde si ça passe
+				-- on actualise la valeur de e_neox et e_neoy et on regarde si れせa passe
 				e_neox = a.x + randx
 
 				e_neoy = a.y + randy
 			end
 
-			-- une fois qu'on a trouvé une valeur qui marche, on y va
+			-- une fois qu'on a trouvれた une valeur qui marche, on y va
 			a.x = e_neox
 			a.y = e_neoy
 		end
@@ -453,6 +462,8 @@ function draw_projectiles()
 	do
 		-- aficher la sprite du projectile aux coordonnees
 		spr(2, proj.x, proj.y)
+	-- aficher la sprite num. 128 aux coordonnees x et y du projectile
+		spr(128, proj.x, proj.y)
 	end
 end
 -->8
@@ -510,6 +521,46 @@ function print_outline(text, x, y)
 	print(text, x, y+1, 0)
 	print(text, x, y, 7)
 end
+
+-->8
+--text code
+
+function text_setup()
+-- differents texte a ajouter
+	texts = {}
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+	add_text(3, 3, "premiere clef!!")
+
+
+end
+
+function add_text(x, y, message)
+	texts[x+y*128] = message
+end
+
+function get_text(x,y)
+	return texts[x+y*128]
+end
+
+function draw_text()
+-- affiche le text en fonction de la position perso
+	if (active_text) then
+	textx=perso.x*8+4
+	texty=perso.y*8+48
+
+	rectfill(textx,texty,textx+119,texty+31,7)
+	print(active_text,textx+4,texty+4,1)
+-- message pour indiquer bouton de sortie de l'ecran texte
+	print("haut pour fermer",textx+4,texty+23,6)
+end
+-- mis en place du bouton de sortie 
+	if (btn(⬆️))then 
+	active_text = nil
+end
+end
+
 __gfx__
 000000000000000000000080ccccccccc000cccccccccccccccc00cccccccccccccc000000cccccccccccccc5555555555555555444444444444444444444444
 000000000000ee0000000000cccccccc0a990cccccccccccccc0ee0cccccccccccc06666660ccccccccccccc5555555555555555444444444444444444444444
