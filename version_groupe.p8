@@ -485,7 +485,7 @@ function updt_projectiles()
 	-- pour tous les projectiles dans le tableau
 	for proj in all(projectiles) do
 
-	if check_flag(0, flr(proj.x + proj.neovecteurx), flr(proj.y + proj.neovecteury))
+	if check_flag(0, flr(proj.x * 8 + proj.neovecteurx), flr(proj.y * 8 + proj.neovecteury))
 		then 
 			
 			
@@ -496,7 +496,6 @@ function updt_projectiles()
 		proj.y = proj.y + proj.neovecteury
 	
 
-		-- supprime le projectile si il sort des bords de la map,
 		-- car sinon ils ne disparaissent jamais et deviennent tellement nombreux qu'ils ralentissent le jeu
 		end
 	end
