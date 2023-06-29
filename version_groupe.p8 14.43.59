@@ -137,7 +137,7 @@ end
 
 
 function pick_up_key(x, y)
-	replace_sprite_key(x, y)
+	replace_sprite_(x, y)
 	perso.keys+=1
 end
 

@@ -110,20 +110,11 @@ function  update_camera()
 	camera(camx * 8, camy * 8)
 end
 
--- change la sprite quand la clef est ramasser
-function replace_sprite_key(x, y)
-
-	-- recuperer le numero de sprite
-	sprite = mget(x, y)
-
-	-- changer la sprite pour la sprite suivante a la position 
-	mset(x, y, sprite+1)
-end
 
 -- remplacer n'importe quel groupe de sprite
 function replace_sprite(x, y, h, w, flag, sprnum)
 
-	-- on utilise check flag pour remonter jusqu'à la première case en haut a gauche
+	-- on utilise check flag pour remonter jusqu'れき la premiれそre case en haut a gauche
 	-- en x
 	while (check_flag(flag, (x-1), (y))) do
 	x = x-1
@@ -138,8 +129,8 @@ function replace_sprite(x, y, h, w, flag, sprnum)
 	for  i = 0, h do
 		-- et en largeur
 		for  j = 0, w do
-			-- on change la sprite de la case en trouvant numéro avec
-			-- "num première case + hauteur + (largeur * largeur de la grille (16))"
+			-- on change la sprite de la case en trouvant numれたro avec
+			-- "num premiれそre case + hauteur + (largeur * largeur de la grille (16))"
 			mset(x + i, y + j, sprnum + i + j * 16)
 		end
 	end
@@ -148,14 +139,14 @@ end
 function pick_up_key(x, y)
 
 	-- remplacer la clef posee au sol par une case sol vide
-	replace_sprite(x, y, 1, 1, 1, 35)
+	replace_sprite(x, y, 0, 0, 1, 36)
 
 	-- incrementer le compteur de clees
 	perso.keys+=1
 end
 
 function open_door(x, y)
-	replace_sprite(x, y, 2, 2, 2, 76)
+replace_sprite(x, y, 3, 3, 2, 76)
 
 	-- decrementer le compteur de clef
 	perso.keys-=1
@@ -246,6 +237,7 @@ function interact(x, y)
 
 	-- on la ramsse
 	pick_up_key(x, y)
+	
 	
 	-- sinon, si le flag indique une porte
 --flag 2 pour les portes
@@ -598,16 +590,17 @@ end
 function draw_text()
 -- affiche le text en fonction de la position perso
 	if (active_text) then
-	textx = camx * 8 + 4
-	texty = camy * 8 + 48
+	textx = camx
+	texty = camy + 8
 
 	rectfill(textx,texty,textx+119,texty+31,7)
 	print(active_text,textx+4,texty+4,1)
 -- message pour indiquer bouton de sortie de l'ecran texte
-	print("haut pour fermer",textx+4,texty+23,6)
+	print("c pour fermer",textx+4,texty+23,6)
 end
 -- mis en place du bouton de sortie 
-	if (btnp(q))then 
+	if (btnp(🅾️))then 
+
 	active_text = nil
 end
 end
@@ -742,7 +735,7 @@ d0dd1d1d1dd10ddddddd1dddd10dd1d1d0dd1d1dddd60d1001d6ddddd10dd1d1d0dd1d11dd110d10
 00011110000000000000000000000000022222222200222222222222222222202222222222222200222222222002222277770000000000000000777700000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000077770000000000000000777700000000
 __gff__
-00000000000000000000000000010101000000000000000000000000000100010000000a0000000000000000000101010000000000000000000000000000000000000000000000000404040104040401000100010101000014040404140000040000000000000000040404010400000100000000000000000404040104000001
+00000000000000000000000000010101000000000000000000000000000100010000000a0000000000000000000101010000000000000000000000000000000000000000000000000101010104040401000100010101000011010101140000040000000000000000010101010400000100000000000000000101010104000001
 0101010101010101010101010505050501010101010101010101010105050505010101010101010101010101050505050101010101010101010101010505050501010101000000000000000001010108010101010000000000000000010101000101010100000000000000000100010101010101000000000000000001000100
 __map__
 cc8182838c8d8e8f8485868780818248494a4b8388898a8b80ce000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
